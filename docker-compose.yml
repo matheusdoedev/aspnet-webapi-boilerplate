@@ -2,7 +2,7 @@ version: "3"
 
 services:
   db:
-    image: postgres:latest
+    image: docker.io/postgres:latest
     restart: always
     environment:
       - POSTGRES_USER=docker
