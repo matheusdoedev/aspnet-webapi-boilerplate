@@ -3,6 +3,6 @@ public class HealthCheckAdapter : HealthCheckPort
 {
 	public string CheckHealth()
 	{
-		throw new NotImplementedException();
+		return DateTime.Now.ToString();
 	}
 }

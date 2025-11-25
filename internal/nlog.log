@@ -1,0 +1,7 @@
+2025-11-25 09:27:31.5549 Info Selecting time source FastUTC (time source)
+2025-11-25 12:27:31.5808 Warn Error has been raised. Exception: NLog.NLogConfigurationException: ${replace} cannot assign unknown property 'regex='
+2025-11-25 12:27:31.6233 Info Registered target NLog.Targets.FileTarget(Name=file)
+2025-11-25 12:27:31.6233 Info Registered target NLog.Targets.ConsoleTarget(Name=console)
+2025-11-25 12:27:31.6366 Info NLog, Version=6.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c. File version: 6.0.6.4706. Product version: 6.0.6+1913a823347d47c0b004ce714af74436261daf20. GlobalAssemblyCache: False
+2025-11-25 12:27:31.6780 Info Configuration initialized: TargetNames=file, console, ConfigItems=105, AutoReload=true, FilePath=/home/matheusdoedev/repositories/aspnet-webapi-boilerplate/bin/Debug/net10.0/nlog.config
+2025-11-25 12:27:32.0377 Info NLogRequestPostedBodyMiddleware is not yet initialized, which is required by aspnet-request-posted-body.
