@@ -1,25 +1,30 @@
 using NLog;
 using NLog.Web;
 
-var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.EntityFrameworkCore;
+
+Logger? logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
+string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION") ?? throw new ArgumentException("Invalid connection string.");
 
 try
 {
     DotNetEnv.Env.Load();
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
     builder.Services.AddScoped<HealthCheckPort, HealthCheckAdapter>();
+    builder.Services.AddScoped<AuthenticationPort, AuthenticationAdapter>();
     builder.Host.UseNLog();
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
-    app.MapControllers();
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
     }
 
+    app.MapControllers();
     app.UseHttpsRedirection();
     await app.RunAsync();
 
