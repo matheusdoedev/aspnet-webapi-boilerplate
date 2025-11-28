@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 public class User
 {
 	[Column("id")]
-	public int Id { get; set; }
+	public string Id { get; set; } = "";
 
 	[Column("username")]
 	public string Username { get; set; } = "";
@@ -13,5 +13,5 @@ public class User
 	public string Email { get; set; } = "";
 
 	[Column("password_hash")]
-	public string PasswordHash { get; set; } = "";
+	public byte[] PasswordHash { get; set; } = [];
 }

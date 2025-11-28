@@ -13,8 +13,15 @@ try
     builder.Services.AddControllers();
     builder.Services.AddOpenApi();
     builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+
+    #region ports and adapters
     builder.Services.AddScoped<HealthCheckPort, HealthCheckAdapter>();
     builder.Services.AddScoped<AuthenticationPort, AuthenticationAdapter>();
+    builder.Services.AddScoped<UserRepositoryPort, UserRepositoryAdapter>();
+    builder.Services.AddScoped<TokenizerPort, TokenizerAdapter>();
+    builder.Services.AddScoped<EncryptorPort, EncryptorAdapter>();
+    #endregion
+
     builder.Host.UseNLog();
 
     WebApplication app = builder.Build();
