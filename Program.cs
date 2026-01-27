@@ -1,43 +1,48 @@
-using System.Text;
+using NLog;
+using NLog.Web;
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.EntityFrameworkCore;
 
-using AspNetWebApiBoilerplate.Contexts;
+Logger? logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
+string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION") ?? throw new ArgumentException("Invalid connection string.");
 
-using Npgsql;
+try
+{
+    DotNetEnv.Env.Load();
+    builder.Services.AddControllers();
+    builder.Services.AddOpenApi();
+    builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
-using DotEnv.Core;
+    #region ports and adapters
+    builder.Services.AddScoped<HealthCheckPort, HealthCheckAdapter>();
+    builder.Services.AddScoped<AuthenticationPort, AuthenticationAdapter>();
+    builder.Services.AddScoped<UserRepositoryPort, UserRepositoryAdapter>();
+    builder.Services.AddScoped<TokenizerPort, TokenizerAdapter>();
+    builder.Services.AddScoped<EncryptorPort, EncryptorAdapter>();
+    #endregion
 
-new EnvLoader().Load();
+    builder.Host.UseNLog();
 
-string jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new ArgumentException("jwt key env not defined");
-string connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION") ?? throw new ArgumentException("db connection string env not defined");
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+    WebApplication app = builder.Build();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    if (app.Environment.IsDevelopment())
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = "localhost",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
-builder.Services.AddAuthorization();
+        app.MapOpenApi();
+    }
 
-WebApplication app = builder.Build();
+    app.MapControllers();
+    app.UseHttpsRedirection();
+    await app.RunAsync();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.MapControllers();
+}
+catch (Exception ex)
+{
+    logger.Error(ex, "Stopped program because of exception");
+    throw new InvalidOperationException("An error occurred while starting the application.", ex);
 
-await app.RunAsync();
+}
+finally
+{
+    LogManager.Shutdown();
+}

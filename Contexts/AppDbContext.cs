@@ -1,12 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace AspNetWebApiBoilerplate.Contexts;
-
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public class AppDbContext : DbContext
 {
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-		if (!optionsBuilder.IsConfigured)
-			optionsBuilder.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION"));
+	public DbSet<User> Users { get; set; }
+
+	public AppDbContext(DbContextOptions options) : base(options)
+	{
+		AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+		AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
+	}
+
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		optionsBuilder.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION"));
+	}
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		modelBuilder.UseDatabaseTemplate("postgres");
 	}
 }

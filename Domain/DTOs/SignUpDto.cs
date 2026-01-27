@@ -1,5 +1,3 @@
-namespace AspNetWebApiBoilerplate.dtos;
-
 public class SignUpDto
 {
 	public string UserName { get; set; } = "";
