@@ -7,11 +7,11 @@ public class AuthenticationInterceptor(AuthenticationPort authenticationPort)
 	private readonly AuthenticationPort _authenticationPort = authenticationPort;
 
 	[HttpPost("login")]
-	public IResult PostLogin([FromBody] LoginDto loginDto)
+	public async Task<IResult> PostLogin([FromBody] LoginDto loginDto)
 	{
 		try
 		{
-			LoginResponseDto response = _authenticationPort.Login(loginDto);
+			LoginResponseDto response = await _authenticationPort.Login(loginDto);
 
 			return Results.Ok(response);
 		}

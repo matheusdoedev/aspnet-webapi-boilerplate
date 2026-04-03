@@ -1,6 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-
 public class AuthenticationAdapter(UserRepositoryPort userRepository, TokenizerPort tokenizer, EncryptorPort encryptor) : AuthenticationPort
 {
 	private readonly UserRepositoryPort _userRepository = userRepository;
@@ -9,27 +6,37 @@ public class AuthenticationAdapter(UserRepositoryPort userRepository, TokenizerP
 
 	public async Task<LoginResponseDto> Login(LoginDto loginDto)
 	{
-		User? user = await GetUser(loginDto.UserName) ?? throw new ArgumentException("User with these credentials already exists.");
-
+		User? user = await GetUser(loginDto.UserName) ?? throw new ArgumentException("Does not exists user with those credentials.");
 		// verify if password is valid
-
-		// generate jwt token
-
-		// return token
-	}
-
-	public async Task<SignUpResponseDto> SignUp(SignUpDto signUpDto)
-	{
-		User? user = await GetUser(signUpDto.UserName) ?? throw new ArgumentException("User with these credentials already exists.");
-		bool isPasswordValid = CheckIfPasswordIsValid(signUpDto.Password, user.PasswordHash);
+		bool isPasswordValid = CheckIfPasswordIsValid(loginDto.Password, user.PasswordHash);
 
 		if (!isPasswordValid)
 		{
 			throw new ArgumentException("Password is not valid.");
 		}
+
+		// generate jwt token
+		string token = GenerateToken(loginDto.UserName, user.Email);
+		LoginResponseDto response = new()
+		{
+			AccessToken = token
+		};
+
+		return response;
+	}
+
+	public async Task<SignUpResponseDto> SignUp(SignUpDto signUpDto)
+	{
+		User? user = await GetUser(signUpDto.UserName);
+
+		if (user != null)
+		{
+			throw new ArgumentException("User with these credentials already exists.");
+		}
+
 		await SaveAccount(signUpDto);
 
-		string token = GenerateToken(signUpDto);
+		string token = GenerateToken(signUpDto.UserName, signUpDto.Email);
 		SignUpResponseDto response = new()
 		{
 			AccessToken = token
@@ -73,12 +80,12 @@ public class AuthenticationAdapter(UserRepositoryPort userRepository, TokenizerP
 		await _userRepository.Save(user);
 	}
 
-	private string GenerateToken(SignUpDto signUpDto)
+	private string GenerateToken(string username, string email)
 	{
 		Dictionary<string, string> claims = new()
 		{
-			{ "username", signUpDto.UserName },
-			{ "email", signUpDto.Email }
+			{ "username", username },
+			{ "email", email }
 		};
 
 		return _tokenizer.GenerateToken(claims);
